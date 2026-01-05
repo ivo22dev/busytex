@@ -23,7 +23,10 @@ CXXFLAGS_native      = -fexceptions -frtti
 CFLAGS_OPT_wasm      = -Oz
 
 ROOT                := $(CURDIR)
-EMROOT              := $(dir $(shell which emcc))
+EMROOT              := $(dir $(shell command -v emcc))
+ifeq ($(EMROOT),)
+  $(warning Emscripten (emcc) not found in PATH. WASM build will likely fail.)
+endif
 
 BUSYTEX_native       = $(abspath build/native/busytex)
 TEXMFFULL            = $(abspath build/texlive-full)
@@ -36,7 +39,7 @@ PYTHON        = python3
 PERL          = perl
 MAKE_wasm     = emmake $(MAKE)
 CMAKE_wasm    = emcmake cmake
-CONFIGURE_wasm= $(EMROOT)/emconfigure
+CONFIGURE_wasm= emconfigure
 AR_wasm       = emar
 CC_wasm       = emcc
 CXX_wasm      = em++
@@ -452,12 +455,19 @@ build/texlive-%.txt: build/texlive-%.profile source/texmfrepo.txt
 	$(foreach name,mktexlsr.pl updmap-sys.sh updmap.pl fmtutil-sys.sh fmtutil.pl,mv $(basename $@)/texmf-dist/scripts/texlive/$(name) $(basename $@)/$(BINARCH_native)/$(basename $(name)); )
 	#mkdir -p $(ROOT)/source/texmfrepotmp; export TMPDIR=$(ROOT)/source/texmfrepotmp 
 	TEXLIVE_INSTALL_NO_RESUME=1 $(PERL) source/texmfrepo/install-tl --repository source/texmfrepo --profile build/texlive-$*.profile --custom-bin $(ROOT)/$(basename $@)/$(BINARCH_native) --no-doc-install --no-src-install # strace -f -s 128 
-	# 
+	# Install hyphen-spanish patterns manually
+	cp -r hyphen-spanish/tex/generic/hyph-utf8/* $(basename $@)/texmf-dist/tex/generic/hyph-utf8/
+	echo 'spanish loadhyph-es.tex' >> $(basename $@)/texmf-dist/tex/generic/config/language.dat
+	echo 'espanol loadhyph-es.tex' >> $(basename $@)/texmf-dist/tex/generic/config/language.dat
+	# Regenerate formats to include Spanish hyphenation patterns
+	cd $(basename $@) && TEXMFDIST=$(ROOT)/$(basename $@)/texmf-dist TEXMFVAR=$(ROOT)/$(basename $@)/texmf-dist/texmf-var TEXMFCNF=$(ROOT)/$(basename $@)/texmf-dist/web2c $(ROOT)/$(basename $@)/$(BINARCH_native)/fmtutil --all
+	#  
 	##printf "#!/bin/sh\n$(ROOT)/$(basename $@)/$(BINARCH_native)/busytex lualatex   $$"@ > $(basename $@)/$(BINARCH_native)/luahbtex
 	echo '<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig><dir>/texlive/texmf-dist/fonts/opentype</dir><dir>/texlive/texmf-dist/fonts/type1</dir></fontconfig>' > $(basename $@)/fonts.conf
 	-mv $(basename $@)/texmf-dist/texmf-var/web2c/luahbtex/lualatex.fmt $(basename $@)/texmf-dist/texmf-var/web2c/luahbtex/luahblatex.fmt
 	ls $(basename $@)/texmf-dist/texmf-var/web2c/*/*.fmt
 	rm -rf $(addprefix $(basename $@)/texmf-dist/texmf-var/web2c/, pdftex/latex.fmt pdftex/etex.fmt pdftex/pdfetex.fmt pdftex/pdftex.fmt pdftex/mptopdf.fmt pdftex/latex-dev.fmt pdftex/pdflatex-dev.fmt xetex/xetex.fmt xetex/xelatex-dev.fmt luahbtex/luahbtex.fmt luahbtex/lualatex-dev.fmt) $(addprefix $(basename $@)/, bin/ tlpkg/ texmf-dist/doc/ texmf-dist/scripts/ texmf-dist/source/ install-tl install-tl.log)
+	find $(basename $@)/texmf-dist -name "*.luc" -delete
 	#find packfs -type f -executable -delete -o -name '*.ld' -delete -o -name '*.a' -delete -o -name '*.so' -delete -o -name '*.h' -delete -o -name '*.pod' -delete 
 	mkdir -p $(dir $@)
 	find $(basename $@) > $@
