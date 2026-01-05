@@ -1,0 +1,77 @@
+name: build-full
+
+on: 
+  workflow_dispatch:
+
+env:
+  MAKE_PARALLELISM: -j4
+
+jobs:
+  build-full:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install Prerequisites
+        run: sudo apt-get update && sudo apt-get install -y gperf p7zip-full perl cmake build-essential wget
+
+      - uses: actions/checkout@v4
+
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 'latest'
+
+      - name: Verify Emscripten
+        run: emcc --version
+
+      - name: Download and patch TexLive
+        env:
+          MAKEFLAGS: ${{env.MAKE_PARALLELISM}}
+        run: make source/texlive.patched
+
+      - name: Build native tools
+        env:
+          MAKEFLAGS: ${{env.MAKE_PARALLELISM}}
+        run: make native
+
+      - name: Smoke test native binaries
+        run: make smoke-native
+
+      - name: Build WASM
+        env:
+          MAKEFLAGS: ${{env.MAKE_PARALLELISM}}
+        run: make wasm
+
+      - name: Download TexLive Full repository
+        run: make source/texmfrepo.txt
+
+      - name: Build TexLive TDS with Spanish hyphenation
+        env:
+          MAKEFLAGS: ${{env.MAKE_PARALLELISM}}
+        run: make build/texlive-basic.txt
+
+      - name: Package WASM data
+        run: make build/wasm/texlive-basic.js
+
+      - name: Create dist
+        run: make dist-wasm
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: busytex-wasm
+          path: |
+            dist-wasm/
+          retention-days: 30
+
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create build_full_${{github.sha}}_${{ github.run_id }} \
+            -t "Full build with Spanish hyphenation" \
+            busytex_pipeline.js \
+            busytex_worker.js \
+            dist-wasm/busytex.js \
+            dist-wasm/busytex.wasm \
+            dist-wasm/texlive-basic.js \
+            dist-wasm/texlive-basic.data
