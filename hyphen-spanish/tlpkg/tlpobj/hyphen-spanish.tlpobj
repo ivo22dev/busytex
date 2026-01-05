@@ -1,0 +1,21 @@
+name hyphen-spanish
+category TLCore
+revision 75447
+shortdesc Spanish hyphenation patterns.
+relocated 1
+longdesc Hyphenation patterns for Spanish in T1/EC and UTF-8 encodings.
+depend hyph-utf8
+depend hyphen-base
+execute AddHyphen 	name=spanish synonyms=espanol 	lefthyphenmin=2 	righthyphenmin=2 	file=loadhyph-es.tex 	file_patterns=hyph-es.pat.txt 	file_exceptions=
+runfiles size=33
+ RELOC/tex/generic/hyph-utf8/loadhyph/loadhyph-es.tex
+ RELOC/tex/generic/hyph-utf8/patterns/ptex/hyph-es.ec.tex
+ RELOC/tex/generic/hyph-utf8/patterns/tex/hyph-es.tex
+ RELOC/tex/generic/hyph-utf8/patterns/txt/hyph-es.pat.txt
+catalogue-contact-bugs https://github.com/jbezos/tex-hyphen-spanish/issues
+catalogue-contact-home http://cervantex.es/
+catalogue-contact-repository https://github.com/jbezos/tex-hyphen-spanish
+catalogue-ctan /language/spanish/hyphen-spanish
+catalogue-license mit
+catalogue-topics hyphenation spanish
+catalogue-version 5.0
