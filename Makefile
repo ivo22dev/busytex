@@ -390,12 +390,13 @@ build/%/texlive/texk/web2c/busytex_libxetex.a: build/%/texlive.configured
 	$(call BUSYTEXIZE_A,$(dir $@),libxetex.a)
 
 build/%/texlive/texk/web2c/busytex_libpdftex.a: build/%/texlive.configured
-	# copying generated C files from native version, since string offsets are off
+	# Generate .c files first, then patch them
 	mkdir -p $(dir $@)
-	# pdftexini.c, pdftex0.c pdftex-pool.c
-	-cp $(subst wasm,native,$(dir $@))*.c $(dir $@)
+	# Generate pdftexini.c, pdftex0.c, pdftex-pool.c
+	$(MAKE_$*) -C $(dir $@) pdftexini.c pdftex0.c pdftex-pool.c $(subst -Dmain=, -Dbusymain=, $(OPTS_PDFTEX_$*))
 	# Fix type mismatch in pdftexini.c: pdffonthasspacechar is boolean*, not internalfontnumber*
 	sed -i 's/pdffonthasspacechar = xmallocarray ( internalfontnumber , fontmax )/pdffonthasspacechar = xmallocarray ( boolean , fontmax )/g' $(dir $@)pdftexini.c
+	# Now compile with patched files
 	$(MAKE_$*) -C $(dir $@) pdftexd.h synctexdir/pdftex-synctex.o pdftex-pdftexini.o pdftex-pdftex0.o pdftex-pdftex-pool.o $(subst -Dmain=, -Dbusymain=, $(OPTS_PDFTEX_$*))
 	$(EXTERN_SYM)     $(dir $@)/pdftexd.h                   $(PDFTEX_EXTERN)
 	$(MAKE_$*) -C $(dir $@) pdftexdir/pdftex-pdftexextra.o  $(OPTS_PDFTEX_$*)
