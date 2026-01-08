@@ -219,7 +219,7 @@ source/texlive.txt source/expat.txt source/fontconfig.txt:
 	find $(basename $@) > $@
 
 source/texmfrepo.txt:
-	mkdir -p $(dir $@)
+	mkdir -p $(dir $(basename $@))
 	mkdir -p $(basename $@)
 	curl -L $(URL_texlive_full_iso_cache) | bsdtar -x -C $(basename $@)
 	find $(basename $@) > $@
