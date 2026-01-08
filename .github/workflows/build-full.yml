@@ -2,6 +2,10 @@ name: build-full
 
 on: 
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+      - copilot/**
 
 env:
   MAKE_PARALLELISM: -j4
