@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Install Prerequisites
-        run: sudo apt-get update && sudo apt-get install -y gperf p7zip-full perl cmake build-essential wget
+        run: sudo apt-get update && sudo apt-get install -y gperf p7zip-full perl cmake build-essential wget libarchive-tools
 
       - uses: actions/checkout@v4
 
