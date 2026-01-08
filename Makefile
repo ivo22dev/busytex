@@ -219,6 +219,7 @@ source/texlive.txt source/expat.txt source/fontconfig.txt:
 	find $(basename $@) > $@
 
 source/texmfrepo.txt:
+	mkdir -p $(dir $(basename $@))
 	mkdir -p $(basename $@)
 	curl -L $(URL_texlive_full_iso_cache) | bsdtar -x -C $(basename $@)
 	find $(basename $@) > $@
@@ -230,6 +231,9 @@ source/texlive.patched: source/texlive.txt
 	# See the contents of `cosmo_getpass.h` for more details.
 	cp cosmo_getpass.h                    $(abspath source/texlive/texk/dvipdfm-x/cosmo_getpass.h)
 	sed -i '1i#include "cosmo_getpass.h"' $(abspath source/texlive/texk/dvipdfm-x/dvipdfmx.c)
+	# Add emscripten compatibility header for WASM builds
+	cp emscripten_compat.h                $(abspath source/texlive/texk/dvipdfm-x/emscripten_compat.h)
+	sed -i '1i#include "emscripten_compat.h"' $(abspath source/texlive/texk/dvipdfm-x/dvipdfmx.c)
 	touch $@
 
 build/%/texlive.configured: source/texlive.patched
@@ -463,7 +467,7 @@ build/texlive-%.txt: build/texlive-%.profile source/texmfrepo.txt
 	echo 'spanish loadhyph-es.tex' >> $(basename $@)/texmf-dist/tex/generic/config/language.dat
 	echo 'espanol loadhyph-es.tex' >> $(basename $@)/texmf-dist/tex/generic/config/language.dat
 	# Regenerate formats to include Spanish hyphenation patterns
-	cd $(basename $@) && TEXMFDIST=$(ROOT)/$(basename $@)/texmf-dist TEXMFVAR=$(ROOT)/$(basename $@)/texmf-dist/texmf-var TEXMFCNF=$(ROOT)/$(basename $@)/texmf-dist/web2c $(ROOT)/$(basename $@)/$(BINARCH_native)/fmtutil --all
+	-cd $(basename $@) && PATH=$(ROOT)/$(basename $@)/$(BINARCH_native):$$PATH TEXMFDIST=$(ROOT)/$(basename $@)/texmf-dist TEXMFVAR=$(ROOT)/$(basename $@)/texmf-dist/texmf-var TEXMFCNF=$(ROOT)/$(basename $@)/texmf-dist/web2c $(ROOT)/$(basename $@)/$(BINARCH_native)/fmtutil --sys --all
 	#  
 	##printf "#!/bin/sh\n$(ROOT)/$(basename $@)/$(BINARCH_native)/busytex lualatex   $$"@ > $(basename $@)/$(BINARCH_native)/luahbtex
 	echo '<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig><dir>/texlive/texmf-dist/fonts/opentype</dir><dir>/texlive/texmf-dist/fonts/type1</dir></fontconfig>' > $(basename $@)/fonts.conf
