@@ -467,7 +467,7 @@ build/texlive-%.txt: build/texlive-%.profile source/texmfrepo.txt
 	echo 'spanish loadhyph-es.tex' >> $(basename $@)/texmf-dist/tex/generic/config/language.dat
 	echo 'espanol loadhyph-es.tex' >> $(basename $@)/texmf-dist/tex/generic/config/language.dat
 	# Regenerate formats to include Spanish hyphenation patterns
-	cd $(basename $@) && PATH=$(ROOT)/$(basename $@)/$(BINARCH_native):$$PATH TEXMFDIST=$(ROOT)/$(basename $@)/texmf-dist TEXMFVAR=$(ROOT)/$(basename $@)/texmf-dist/texmf-var TEXMFCNF=$(ROOT)/$(basename $@)/texmf-dist/web2c $(ROOT)/$(basename $@)/$(BINARCH_native)/fmtutil --sys --all
+	-cd $(basename $@) && PATH=$(ROOT)/$(basename $@)/$(BINARCH_native):$$PATH TEXMFDIST=$(ROOT)/$(basename $@)/texmf-dist TEXMFVAR=$(ROOT)/$(basename $@)/texmf-dist/texmf-var TEXMFCNF=$(ROOT)/$(basename $@)/texmf-dist/web2c $(ROOT)/$(basename $@)/$(BINARCH_native)/fmtutil --sys --all
 	#  
 	##printf "#!/bin/sh\n$(ROOT)/$(basename $@)/$(BINARCH_native)/busytex lualatex   $$"@ > $(basename $@)/$(BINARCH_native)/luahbtex
 	echo '<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig><dir>/texlive/texmf-dist/fonts/opentype</dir><dir>/texlive/texmf-dist/fonts/type1</dir></fontconfig>' > $(basename $@)/fonts.conf
