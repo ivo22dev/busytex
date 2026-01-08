@@ -219,6 +219,7 @@ source/texlive.txt source/expat.txt source/fontconfig.txt:
 	find $(basename $@) > $@
 
 source/texmfrepo.txt:
+	mkdir -p $(dir $@)
 	mkdir -p $(basename $@)
 	curl -L $(URL_texlive_full_iso_cache) | bsdtar -x -C $(basename $@)
 	find $(basename $@) > $@
@@ -230,6 +231,9 @@ source/texlive.patched: source/texlive.txt
 	# See the contents of `cosmo_getpass.h` for more details.
 	cp cosmo_getpass.h                    $(abspath source/texlive/texk/dvipdfm-x/cosmo_getpass.h)
 	sed -i '1i#include "cosmo_getpass.h"' $(abspath source/texlive/texk/dvipdfm-x/dvipdfmx.c)
+	# Add emscripten compatibility header for WASM builds
+	cp emscripten_compat.h                $(abspath source/texlive/texk/dvipdfm-x/emscripten_compat.h)
+	sed -i '1i#include "emscripten_compat.h"' $(abspath source/texlive/texk/dvipdfm-x/dvipdfmx.c)
 	touch $@
 
 build/%/texlive.configured: source/texlive.patched
